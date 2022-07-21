@@ -22,3 +22,4 @@ Future updates will include routing the query through E-utilities instead of Pub
 * **n = 1** PMID didn't have their date extracted 
 * **n=255** Titles, Hospital Affiliations (calculated by majority), Journal, Article Type and DOI were correctly extracted
 
+<img width="960" alt="255_test" src="https://user-images.githubusercontent.com/99373791/180149832-3bb59183-092e-4748-9086-bf81c0271491.png">

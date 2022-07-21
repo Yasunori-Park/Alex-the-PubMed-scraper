@@ -7,7 +7,7 @@ A scraper (called **Alex**) for PubMed *(does not use E-utilities yet)* that whe
 * **Country** the majority of authors are affiliated with of queried PMID
 * Whether or not the majority of authors are **affiliated with a hospital** 
 * **DOI** of the queried PMID 
-* **Article type** of the queried PMID (if listed. If it is blank in the results, it is an original contribution)
+* **Article type** of the queried PMID
 
 Any libraries that are needed to run Alex are listed at the top of the .py file. 
 

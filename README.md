@@ -1,5 +1,3 @@
-# Scraper is currently bugged. Recommended not to use if you are interested in the article type. 
-
 # Alex the PubMed Scraper
 A scraper (called **Alex**) for PubMed *(does not use E-utilities yet)* that when fed a list of PMIDs in an excel spreadsheet, returns the following: 
 * **PMID**
@@ -15,17 +13,12 @@ Any libraries that are needed to run Alex are listed at the top of the .py file.
 
 Future updates will include routing the query through E-utilities instead of PubMed. 
 
-## Any results from Alex should be manually checked
-Alex has only been tested on the following PMIDs:
+## Alex was tested on a list of 255 PubMed IDs:
+* Tested PMIDs are stored in: **Alex_test_255.xlsx**
+* Results of the PMIDs are stored in: **Testing_255.xlsx**
+* Alex took **578 seconds (~9 minutes 38 seconds)** to search the 255 PMIDs (this includes the time.sleep(1) run on all 255 loops)
+* Manually rechecking all entries took **1 hour 56 minutes** 
+* Of the **n=255** PMIDs, only **n=5** PMIDs didn't have their country correctly extracted
+* **n = 1** PMID didn't have their date extracted 
+* **n=255** Titles, Hospital Affiliations (calculated by majority), Journal, Article Type and DOI were correctly extracted
 
-* 29046142
-* 28771186
-* 29151973
-* 33279761
-* 31376328
-* 29467857
-* 25721211
-* 33843511
-* 35022248
-
-Therefore, any further attempts at using Alex should be accompanied with manual rechecking of results. 

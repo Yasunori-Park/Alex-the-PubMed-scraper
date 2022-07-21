@@ -1,3 +1,5 @@
+# Scraper is currently bugged. Recommended not to use if you are interested in the article type. 
+
 # Alex the PubMed Scraper
 A scraper (called **Alex**) for PubMed *(does not use E-utilities yet)* that when fed a list of PMIDs in an excel spreadsheet, returns the following: 
 * **PMID**

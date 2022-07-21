@@ -5,6 +5,7 @@ import string
 import re
 import pandas as pd
 from pandas import ExcelWriter
+from itertools import repeat
 
 #Patch list:
 #Ver. 1.0: Alex is created (yay!)
@@ -17,10 +18,15 @@ from pandas import ExcelWriter
 #Ver. 1.2: Alex can now read multiple PMIDs from an excel file, and retrieve results and store them in
 #           a new excel sheet.
 #   !       Alex can now retrieve titles, journals, publication year, article type, DOI
+#   !       Alex now correctly appends original research as "original research"
+#   !       Removed "Macau" from list of countries
 
 #Known bugs:
 ##Currently can only search for "hospital",
 #   not including the word in other languages such as in french
+#   Countries that are two words e.g. Czech Republic, United States instead of USA, even if they are in
+#   the Country list, are not recognized.
+# Need to manually check Batch test results to see how it did in extracting information e.g. affiliations
 #Need to test:
 #How it responds if the author has multiple countries
 #Might need to go through official NCBI channels if we want to run this on >50 PMIDs (e-utilities?)
@@ -30,16 +36,16 @@ Country = ['Afghanistan',  'Albania',  'Algeria',  'American Samoa',  'Andorra',
      'Cocos Islands',  'Colombia',  'Comoros',  'Cook Islands',  'Coral Sea Islands',  'Costa Rica',  "Cote d'Ivoire",  'Croatia',  'Cuba',  'Curacao',  'Cyprus',  'Czech Republic',  'Democratic Republic of the Congo',  'Denmark',  'Djibouti',  'Dominica',  'Dominican Republic',  'Ecuador',  'Egypt',  'El Salvador',  'Equatorial Guinea',  'Eritrea',  'Estonia',  'Eswatini',  'Ethiopia',  'Europa Island',
      'Falkland Islands (Islas Malvinas)',  'Faroe Islands',  'Fiji',  'Finland',  'France',  'French Guiana',  'French Polynesia',  'French Southern and Antarctic Lands',  'Gabon',  'Gambia',  'Gaza Strip',  'Georgia',  'Germany',  'Ghana',  'Gibraltar',  'Glorioso Islands',  'Greece',  'Greenland',  'Grenada',  'Guadeloupe',  'Guam',  'Guatemala',  'Guernsey',  'Guinea',  'Guinea-Bissau',  'Guyana',  'Haiti',
      'Heard Island and McDonald Islands',  'Honduras',  'Hong Kong',  'Howland Island',  'Hungary',  'Iceland',  'India',  'Indian Ocean',  'Indonesia',  'Iran',  'Iraq',  'Ireland',  'Isle of Man',  'Israel',  'Italy',  'Jamaica',  'Jan Mayen',  'Japan',  'Jarvis Island',  'Jersey',  'Johnston Atoll',  'Jordan',  'Juan de Nova Island',  'Kazakhstan',  'Kenya',  'Kerguelen Archipelago',  'Kingman Reef',  'Kiribati',
-     'Kosovo',  'Kuwait',  'Kyrgyzstan',  'Laos',  'Latvia',  'Lebanon',  'Lesotho',  'Liberia',  'Libya',  'Liechtenstein',  'Line Islands',  'Lithuania',  'Luxembourg',  'Macau',  'Madagascar',  'Malawi',  'Malaysia',  'Maldives',  'Mali',  'Malta',  'Marshall Islands',  'Martinique',  'Mauritania',  'Mauritius',  'Mayotte',  'Mediterranean Sea',  'Mexico',  'Micronesia, Federated States of',  'Midway Islands',  'Moldova',
+     'Kosovo',  'Kuwait',  'Kyrgyzstan',  'Laos',  'Latvia',  'Lebanon',  'Lesotho',  'Liberia',  'Libya',  'Liechtenstein',  'Line Islands',  'Lithuania',  'Luxembourg',  'Madagascar',  'Malawi',  'Malaysia',  'Maldives',  'Mali',  'Malta',  'Marshall Islands',  'Martinique',  'Mauritania',  'Mauritius',  'Mayotte',  'Mediterranean Sea',  'Mexico',  'Micronesia, Federated States of',  'Midway Islands',  'Moldova',
      'Monaco',  'Mongolia',  'Montenegro',  'Montserrat',  'Morocco',  'Mozambique',  'Myanmar',  'Namibia',  'Nauru',  'Navassa Island',  'Nepal',  'Netherlands',  'New Caledonia',  'New Zealand',  'Nicaragua',  'Niger',  'Nigeria',  'Niue',  'Norfolk Island',  'North Korea',  'North Macedonia',  'North Sea',  'Northern Mariana Islands',  'Norway',  'Oman',  'Pacific Ocean',  'Pakistan',  'Palau',  'Palmyra Atoll',  'Panama',
      'Papua New Guinea',  'Paracel Islands',  'Paraguay',  'Peru',  'Philippines',  'Pitcairn Islands',  'Poland',  'Portugal',  'Puerto Rico',  'Qatar',  'Republic of the Congo',  'Reunion',  'Romania',  'Ross Sea',  'Russia',  'Rwanda',  'Saint Barthelemy',  'Saint Helena',  'Saint Kitts and Nevis',  'Saint Lucia',  'Saint Martin',  'Saint Pierre and Miquelon',  'Saint Vincent and the Grenadines',  'Samoa',  'San Marino',
      'Sao Tome and Principe',  'Saudi Arabia',  'Senegal',  'Serbia',  'Seychelles',  'Sierra Leone',  'Singapore',  'Sint Maarten',  'Slovakia',  'Slovenia',  'Solomon Islands',  'Somalia',  'South Africa',  'South Georgia and the South Sandwich Islands',  'South Korea',  'South Sudan',  'Southern Ocean',  'Spain',  'Spratly Islands',  'Sri Lanka',  'State of Palestine',  'Sudan',  'Suriname',  'Svalbard',  'Sweden',  'Switzerland',
      'Syria',  'Taiwan',  'Tajikistan',  'Tanzania',  'Tasman Sea',  'Thailand',  'Timor-Leste',  'Togo',  'Tokelau',  'Tonga',  'Trinidad and Tobago',  'Tromelin Island',  'Tunisia',  'Turkey',  'Turkmenistan',  'Turks and Caicos Islands',  'Tuvalu',  'Uganda',  'Ukraine',  'United Arab Emirates',  'United Kingdom',  'Uruguay',  'USA',  'Uzbekistan',  'Vanuatu',  'Venezuela',  'Viet Nam',  'Virgin Islands',  'Wake Island',  'Wallis and Futuna',
-     'West Bank',  'Western Sahara',  'Yemen',  'Zambia',  'Zimbabwe', "UK", "United States", "United States of America", "PRC"]
+     'West Bank',  'Western Sahara',  'Yemen',  'Zambia',  'Zimbabwe', "UK", "United States", "United States of America", "PRC", "No Country Listed on PubMed"]
 
 
 def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'):
-    start = time.time()
+    start_final = time.time()
 
     #Place all lists to be exported to Excel here
     PMID_column = []
@@ -51,12 +57,18 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
     Affiliation_column = []
     Country_column = []
 
+    Counter_date = []
+    Counter_article_type = []
+    Counter_doi = []
+
+
     #Read an excel file into the function
     data_frame_from_excel = pd.read_excel(arg)
     list_of_PMID_to_search = data_frame_from_excel["PMID"].to_list()
 
     #Retrieve the relevant web page for each PMID
     for PMID in list_of_PMID_to_search:
+        start = time.time()
         PMID_column.append(PMID)
         print("Version 1.2 of Alex is now searching for details on PMID: _" + str(PMID) + "_")
         url = "https://pubmed.ncbi.nlm.nih.gov/" + str(PMID)
@@ -75,6 +87,9 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
         #Retrieve desired values from <meta/>
         Poll = []
         Double_check_Poll = []
+        Counter_article_type.append("a")
+        Counter_doi.append("b")
+        Counter_date.append("c")
         for x in soup.find_all("span"):
             x.unwrap()
         for y in soup.find_all("meta"):
@@ -91,6 +106,19 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
             if y.get("name", None) == "citation_article_type":
                 Article_Type_column.append(y.get("content", None))
 
+        #If meta content is missing, force values in to avoid mismatching details to PMIDs
+        if len(Article_Type_column) < len(Counter_article_type):
+            Article_Type_column.append("Original research")
+        else:
+            pass
+        if len(doi_column) < len(Counter_doi):
+            doi_column.append("No DOI listed")
+        else:
+            pass
+        if len(Publication_Year_column) < len(Counter_date):
+            Publication_Year_column.append("No date listed")
+        else:
+            pass
         #Split affiliations per author
         array = [''.join(letter for letter in word if letter not in
                          string.punctuation) for word in array if word]
@@ -153,6 +181,9 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
                                 Double_check_Poll.append(Hospital_result)
                         except AttributeError:
                             return None
+                if len(Double_check_Poll) == 0:
+                    Double_check_Poll.append("Yes")
+                    Double_check_Poll.extend(repeat("No", 5))
                 total_second = len(Double_check_Poll)
                 count_Yes_second = Double_check_Poll.count('Yes')
                 ratio_second = count_Yes_second / total_second
@@ -168,11 +199,13 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
         find(list_of_lists)
 
         #Find the most common Country in affiliations
-        def most_frequent(List):
+        def most_frequent(List_country):
             counter = 0
-            num = List[0]
-            for i in List:
-                curr_frequency = List.count(i)
+            if len(List_country) == 0:
+                List_country.append("No Country Listed on PubMed")
+            num = List_country[0]
+            for i in List_country:
+                curr_frequency = List_country.count(i)
                 if (curr_frequency > counter):
                     counter = curr_frequency
                     num = i
@@ -189,10 +222,8 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
                 Country_of_paper.append(l4)
         print("-----------------------------------------------------------------------------\n" +
               "Alex believes each author is from: " + str(Country_of_paper) +
-              "\nThis paper is likely to be affiliated with: " + most_frequent(Country_of_paper) +
-              "\n-----------------------------------------------------------------------------")
+              "\nThis paper is likely to be affiliated with: " + most_frequent(Country_of_paper))
         Country_column.append(most_frequent(Country_of_paper))
-
         #Limit is 3 requests every 1 second. The average script runtime is 1.5.
         #Just to be safe, sleep for 1s between runs.
         end = time.time()
@@ -216,7 +247,7 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
     df_scrape.to_excel(writer)
     writer.save()
     end_final = time.time()
-    total_time_final = end_final - start
+    total_time_final = end_final - start_final
     print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
           + "Running Alex for all listed PMIDs took: " + str(total_time_final) + " seconds\n" +
           "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
@@ -227,5 +258,8 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
 # that lists PMIDs to be searched
 #argument_2 is a file that doesn't exist yet, that will be made by the function.
 # If no name is given, it will automatically be called "Alex_scrape_results.xlsx"
+#If using your own argument names e.g. argument 2 is NOT "Alex_scrape_results.xlsx":
+# File names need to start with r before the quote i.e. r'This_file_is_for_results.xlsx'
+#   r'My_list_of_PMIDs.xlsx'
 
-run_Alex(r'Alex_test.xlsx', r'Results_of_Alex_scrape.xlsx')
+run_Alex(r'Alex_test_255.xlsx', r'Testing_255.xlsx')

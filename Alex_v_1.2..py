@@ -225,12 +225,12 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
               "\nThis paper is likely to be affiliated with: " + most_frequent(Country_of_paper))
         Country_column.append(most_frequent(Country_of_paper))
         #Limit is 3 requests every 1 second. The average script runtime is 1.5.
-        #Just to be safe, sleep for 1s between runs.
+        #Just to be safe, sleep for 0.35s between runs.
         end = time.time()
         total_time = end-start
         print("This search took: " + str(total_time) + " seconds\n=================================="
                                                        "===========================================")
-        time.sleep(1)
+        time.sleep(0.35)
 
     #Append lists to a dataframe that will be exported to Excel
     transpose_1 = {"PMID": PMID_column,

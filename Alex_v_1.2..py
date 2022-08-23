@@ -27,6 +27,7 @@ from itertools import repeat
 #   Countries that are two words e.g. Czech Republic, United States instead of USA, even if they are in
 #   the Country list, are not recognized.
 # Need to manually check Batch test results to see how it did in extracting information e.g. affiliations
+# PMIDs without any authors listed will lead to an error. 
 #Need to test:
 #How it responds if the author has multiple countries
 #Might need to go through official NCBI channels if we want to run this on >50 PMIDs (e-utilities?)

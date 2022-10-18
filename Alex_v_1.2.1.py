@@ -15,7 +15,7 @@ from itertools import repeat
 #    !     Alex can now correctly predict a hospital affiliation even if PubMed has listed 1 affiliation
 #          only on the first author e.g. 20483747 in v.1.0 was predicted ratio of 0.17, now the ratio
 #          is correctly 1.00
-#Ver. 1.2: Alex can now read multiple PMIDs from an excel file, and retrieve results and store them in
+#Ver. 1.2.0: Alex can now read multiple PMIDs from an excel file, and retrieve results and store them in
 #           a new excel sheet.
 #   !       Alex can now retrieve titles, journals, publication year, article type, DOI
 #   !       Alex now correctly appends original research as "original research"

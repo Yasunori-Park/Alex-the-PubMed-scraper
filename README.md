@@ -2,6 +2,7 @@
 A scraper (called **Alex**) for PubMed *(does not use E-utilities yet)* that when fed a list of PMIDs in an excel spreadsheet, returns the following: 
 * **PMID**
 * **Title** of queried PMID
+* **Abstract** of queried PMID
 * **Journal** of queried PMID
 * **Publication date** (according to PubMed) of queried PMID
 * **Country** the majority of authors are affiliated with of queried PMID

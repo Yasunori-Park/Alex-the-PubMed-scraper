@@ -14,7 +14,7 @@ Any libraries that are needed to run Alex are listed at the top of the .py file.
 
 Future updates will include routing the query through E-utilities instead of PubMed. 
 
-## Alex was tested on a list of 255 PubMed IDs:
+## Alex (v 1.2.0) was tested on a list of 255 PubMed IDs:
 * Tested PMIDs are stored in: **Alex_test_255.xlsx**
 * Results of the PMIDs are stored in: **Testing_255.xlsx**
 * Alex took **578 seconds (~9 minutes 38 seconds)** to search the 255 PMIDs (this includes the time.sleep(1) run on all 255 loops)

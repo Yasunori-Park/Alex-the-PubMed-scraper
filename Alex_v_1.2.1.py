@@ -20,6 +20,7 @@ from itertools import repeat
 #   !       Alex can now retrieve titles, journals, publication year, article type, DOI
 #   !       Alex now correctly appends original research as "original research"
 #   !       Removed "Macau" from list of countries
+#Ver. 1.2.1: Alex can now extract Abstracts from PubMed
 
 #Known bugs:
 ##Currently can only search for "hospital",
@@ -57,6 +58,7 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
     Article_Type_column = []
     Affiliation_column = []
     Country_column = []
+    Abstract_column = []
 
     Counter_date = []
     Counter_article_type = []
@@ -84,6 +86,16 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
             replace('                                 ', ''). \
             replace('           ', '')
         Title_column.append(title)
+          
+        # Retrieve the abstract of the PMID query
+        try:
+            new_data = soup.find("div", {"class": "abstract-content selected"})
+            new_data.strong.decompose()
+            Abstract_sections_stripped = new_data.get_text(' ', strip=True)
+            Abstract_column.append(Abstract_sections_stripped)
+        except AttributeError:
+            Abstract_Attr_Error = soup.find("div", {"class": "abstract-content selected"}).get_text(strip=True)
+            Abstract_column.append(Abstract_Attr_Error)
 
         #Retrieve desired values from <meta/>
         Poll = []
@@ -221,8 +233,7 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
                 l3 = [y for y in list_of_lists_split if y in Country]
                 l4 = most_frequent(l3)
                 Country_of_paper.append(l4)
-        print("-----------------------------------------------------------------------------\n" +
-              "Alex believes each author is from: " + str(Country_of_paper) +
+        print("Alex believes each author is from: " + str(Country_of_paper) +
               "\nThis paper is likely to be affiliated with: " + most_frequent(Country_of_paper))
         Country_column.append(most_frequent(Country_of_paper))
         #Limit is 3 requests every 1 second. The average script runtime is 1.5.
@@ -236,6 +247,7 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
     #Append lists to a dataframe that will be exported to Excel
     transpose_1 = {"PMID": PMID_column,
          "Title": Title_column,
+         "Abstract": Abstract_column,
          "Country": Country_column,
          "Hospital Affiliation": Affiliation_column,
          "Recorded publication date": Publication_Year_column,

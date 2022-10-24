@@ -87,15 +87,19 @@ def run_Alex(arg="Alex_test.xlsx", example_save_file=r'Alex_scrape_results.xlsx'
             replace('           ', '')
         Title_column.append(title)
           
-        # Retrieve the abstract of the PMID query
+     # Retrieve the abstract of the PMID query
         try:
-            new_data = soup.find("div", {"class": "abstract-content selected"})
-            new_data.strong.decompose()
-            Abstract_sections_stripped = new_data.get_text(' ', strip=True)
-            Abstract_column.append(Abstract_sections_stripped)
+            No_abstract_available = soup.select_one("div em").get_text(strip=True)
+            Abstract_column.append(No_abstract_available)
         except AttributeError:
-            Abstract_Attr_Error = soup.find("div", {"class": "abstract-content selected"}).get_text(strip=True)
-            Abstract_column.append(Abstract_Attr_Error)
+            try:
+                Abstract_in_sections = soup.find("div", {"class": "abstract-content selected"})
+                Abstract_in_sections.strong.decompose()
+                Abstract_sections_stripped = Abstract_in_sections.get_text(' ', strip=True)
+                Abstract_column.append(Abstract_sections_stripped)
+            except AttributeError:
+                Abstract_no_sections = soup.find("div", {"class": "abstract-content selected"}).get_text(strip=True)
+                Abstract_column.append(Abstract_no_sections)
 
         #Retrieve desired values from <meta/>
         Poll = []
